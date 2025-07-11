@@ -46,6 +46,7 @@ module serving_ram
       if (i_wen) begin
         mem[i_waddr] <= i_wdata;  // Perform write
         o_rdata      <= 8'h00;    // Mask output during write
+         $display("[serving_ram] WRITE: addr=0x%0h data=0x%0h", i_waddr, i_wdata);
       end else begin
         o_rdata <= mem[i_raddr];  // Perform read
       end

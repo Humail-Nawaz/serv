@@ -42,7 +42,7 @@ module servile_mux
    reg		       sim_ack;
 
    wire		       ext = (i_wb_cpu_adr[31:30] != 2'b00);
-
+   //wire ext = (i_wb_cpu_adr[31:28] != 4'h8);
    assign o_wb_cpu_rdt = ext ? i_wb_ext_rdt : i_wb_mem_rdt;
    assign o_wb_cpu_ack = i_wb_ext_ack | i_wb_mem_ack | sim_ack;
 
