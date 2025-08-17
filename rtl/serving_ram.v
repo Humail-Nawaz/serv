@@ -22,7 +22,7 @@ module serving_ram
   #( // Memory parameters
     parameter depth = 256,    //depth = 8192 then 1024 location 1024-128=896/2=448
     parameter aw    = $clog2(depth),  
-    parameter memfile = ""
+    parameter memfile = "hexfile"
   )
   (
     input wire          i_clk,

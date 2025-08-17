@@ -4,7 +4,7 @@ module ServCore #(
     parameter AW             = 32,
     parameter USER_WIDTH     = 0,
     parameter ID_WIDTH       = 0,
-    parameter memfile        = "",
+    parameter memfile        = "hexfile.hex",
     parameter memsize        = 8192,
     parameter sim            = 1'b0,
     parameter RESET_STRATEGY = "MINI",
@@ -63,59 +63,8 @@ module ServCore #(
     input  wire                  i_rmvalid,
     output wire                  o_rmready,
     input  wire [ID_WIDTH:0]   i_rm_id,
-    input  wire [USER_WIDTH:0] i_rm_user,
-
-    // AXI2WB SIGNALS FROM AXI TO SERVING
-    input  wire [AW-1:0] i_awaddr,
-    input  wire          i_awvalid,
-    output wire          o_awready,
-    input  wire [ID_WIDTH-1:0]    i_aw_id,
-    input  wire [7:0]           i_aw_len,
-    input  wire [2:0]           i_aw_size,
-    input  wire [1:0]           i_aw_burst,
-    input  wire                 i_aw_lock,
-    input  wire [3:0]           i_aw_cache,
-    input  wire [2:0]           i_aw_prot,
-    input  wire [3:0]           i_aw_qos,
-    input  wire [3:0]            i_aw_region,
-    input  wire [USER_WIDTH-1:0]  i_aw_user,
-    input wire [5:0]            i_aw_top, 
+    input  wire [USER_WIDTH:0] i_rm_user
     
-    input  wire [AW-1:0] i_araddr,
-    input  wire          i_arvalid,
-    output wire          o_arready,
-    input  wire [ID_WIDTH-1:0]    i_ar_id,
-    input  wire [7:0]           i_ar_len,
-    input  wire [2:0]           i_ar_size,
-    input  wire [1:0]           i_ar_burst,
-    input  wire                 i_ar_lock,
-    input  wire [3:0]           i_ar_cache,
-    input  wire [2:0]           i_ar_prot,
-    input  wire [3:0]           i_ar_qos,
-    input  wire [3:0]           i_ar_region,
-    input  wire [USER_WIDTH-1:0]  i_ar_user,
-
-    
-    input  wire [31:0]   i_wdata,
-    input  wire [3:0]    i_wstrb,
-    input  wire          i_wvalid,
-    output wire          o_wready,
-    input  wire                 i_w_last,
-    input  wire [USER_WIDTH-1:0]  i_w_user,
-    
-    output wire [1:0]    o_bresp,
-    output wire          o_bvalid,
-    input  wire          i_bready,
-    output wire [ID_WIDTH-1:0]     o_b_id,
-    output wire [USER_WIDTH-1:0]   o_b_user,
-    
-    output wire [31:0]   o_rdata,
-    output wire [1:0]    o_rresp,
-    output wire          o_rlast,
-    output wire          o_rvalid,
-    input  wire          i_rready,
-    output wire [ID_WIDTH-1:0]     o_r_id,
-    output wire [USER_WIDTH-1:0]   o_r_user    
 );
 
     // Internal Wishbone interface (SERV <-> Bridge)
@@ -127,32 +76,8 @@ module ServCore #(
     wire [31:0]  o_swb_rdt;
     wire         o_swb_ack;
 
-    // External Wishbone interface (Bridge <-> SERV)
-    wire [AW-1:0] o_mwb_adr;
-    wire [31:0]   o_mwb_dat;
-    wire [3:0]    o_mwb_sel;
-    wire         o_mwb_we;
-    wire         o_mwb_stb;
-    wire [31:0]   i_mwb_rdt;
-    wire          i_mwb_ack;
-
-    // Bridge <-> SERV mux control
-    wire sel_wadr, sel_wdata, sel_radr, sel_rdata, sel_wen;
 
        // Tie off unused AXI signals
-    generate
-  if (ID_WIDTH > 0) begin
-    assign o_b_id = {ID_WIDTH{1'b0}};
-    assign o_r_id = {ID_WIDTH{1'b0}};
-  end
-endgenerate
-
-generate
-  if (USER_WIDTH > 0) begin
-    assign o_b_user = {USER_WIDTH{1'b0}};
-    assign o_r_user = {USER_WIDTH{1'b0}};
-  end
-endgenerate
     
     assign o_awm_id     = 1'b0;
     assign o_awm_len    = 8'b0;
@@ -199,23 +124,7 @@ endgenerate
         .o_wb_we(i_swb_we),
         .o_wb_stb(i_swb_stb),
         .i_wb_rdt(o_swb_rdt),
-        .i_wb_ack(o_swb_ack),
-
-        // Slave WB (Bridge → SERV)
-        .adr_brg(o_mwb_adr),
-        .data_brg(o_mwb_dat),
-        .stb_brg(o_mwb_stb),
-        .wen_brg(o_mwb_we),
-        .sel_brg(o_mwb_sel),
-        .rdt_brg(i_mwb_rdt),
-        .ack_brg(i_mwb_ack),
-
-        // mux selection signals from bridge
-        .sel_wadr(sel_wadr),
-        .sel_wdata(sel_wdata),
-        .sel_radr(sel_radr),
-        .sel_rdata(sel_rdata),
-        .sel_wen(sel_wen)
+        .i_wb_ack(o_swb_ack)
     );
 
     // Instantiate AXI-Wishbone bridge
@@ -231,35 +140,6 @@ endgenerate
         .i_swb_stb(i_swb_stb),
         .o_swb_rdt(o_swb_rdt),
         .o_swb_ack(o_swb_ack),
-
-        // Wishbone master (Bridge → SERV slave)
-        .o_mwb_adr(o_mwb_adr),
-        .o_mwb_dat(o_mwb_dat),
-        .o_mwb_sel(o_mwb_sel),
-        .o_mwb_we(o_mwb_we),
-        .o_mwb_stb(o_mwb_stb),
-        .i_mwb_rdt(i_mwb_rdt),
-        .i_mwb_ack(i_mwb_ack),
-
-        // AXI slave (external → bridge)
-        .i_awaddr(i_awaddr),
-        .i_awvalid(i_awvalid),
-        .o_awready(o_awready),
-        .i_araddr(i_araddr),
-        .i_arvalid(i_arvalid),
-        .o_arready(o_arready),
-        .i_wdata(i_wdata),
-        .i_wstrb(i_wstrb),
-        .i_wvalid(i_wvalid),
-        .o_wready(o_wready),
-        .o_bresp(o_bresp),
-        .o_bvalid(o_bvalid),
-        .i_bready(i_bready),
-        .o_rdata(o_rdata),
-        .o_rresp(o_rresp),
-        .o_rlast(o_rlast),
-        .o_rvalid(o_rvalid),
-        .i_rready(i_rready),
 
         // AXI master (bridge → external)
         .o_awmaddr(o_awmaddr),
@@ -279,14 +159,9 @@ endgenerate
         .i_rmresp(i_rmresp),
         .i_rmlast(i_rmlast),
         .i_rmvalid(i_rmvalid),
-        .o_rmready(o_rmready),
+        .o_rmready(o_rmready)
 
-        // mux selection outputs
-        .sel_wadr(sel_wadr),
-        .sel_wdata(sel_wdata),
-        .sel_radr(sel_radr),
-        .sel_rdata(sel_rdata),
-        .sel_wen(sel_wen)
+        
     );
 
 endmodule
