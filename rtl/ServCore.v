@@ -79,7 +79,7 @@ module ServCore #(
     input  wire [3:0]           i_aw_qos,
     input  wire [3:0]            i_aw_region,
     input  wire [USER_WIDTH-1:0]  i_aw_user,
-    input wire [5:0]            i_aw_top, 
+    input wire [5:0]            i_aw_atop, 
     
     input  wire [AW-1:0] i_araddr,
     input  wire          i_arvalid,
